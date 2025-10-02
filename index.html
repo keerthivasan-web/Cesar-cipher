@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Caesar Cipher method </title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f4f6f9; --card:#ffffff; --accent:#2563eb; --accent-600:#1e40af; --muted:#6b7280; --success:#10b981;
+      --radius:12px; --maxw:720px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,Arial;color:#0f172a}
+    .card{width:94%;max-width:var(--maxw);background:var(--card);border-radius:var(--radius);box-shadow:0 12px 40px rgba(15,23,42,0.06);padding:28px;border-left:6px solid var(--accent-600)}
+    h1{margin:0 0 8px;font-size:20px;font-weight:600;color:var(--accent-600)}
+    p.lead{margin:0 0 18px;color:var(--muted);font-size:14px}
+
+    .form-row{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+    label{font-size:13px;color:#0f172a;margin-bottom:6px;display:block}
+    textarea{width:100%;min-height:160px;padding:12px;border:1px solid #e6eef8;border-radius:8px;font-size:15px;resize:vertical}
+
+    .controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .shift-box{display:flex;align-items:center;gap:12px}
+    .shift-value{font-weight:600;color:var(--accent-600);min-width:36px;text-align:center}
+    input[type=range]{width:220px}
+
+    .buttons{display:flex;gap:10px;margin-top:12px}
+    button{padding:10px 16px;border-radius:8px;border:1px solid rgba(15,23,42,0.06);background:#fff;cursor:pointer;font-weight:600}
+    .btn-primary{background:rgba(255, 0, 0, 0.892);color:#fff;border:0}
+    .btn-secondary{background:#179c69;border:1px solid #eaecf0}
+
+    .result{margin-top:16px;padding:14px;border-radius:8px;border:1px solid #e6eef8;background:#fbfdff;min-height:70px;white-space:pre-wrap;color:#0f172a}
+
+    .result-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+    .small{font-size:13px;color:var(--muted)}
+
+    @media (max-width:520px){
+      .controls{flex-direction:column;align-items:flex-start}
+      input[type=range]{width:100%}
+      .buttons{flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Caesar Cipher</h1>
+    <p class="lead">Use this simple tool to encrypt or decrypt text with a Caesar shift (1–30). Non-letter characters are preserved and letter case is maintained.</p>
+
+    <label for="cipher-text">Input text</label>
+    <textarea id="cipher-text" placeholder="Type or paste text here..." spellcheck="false"></textarea>
+
+    <div class="form-row">
+      <div class="controls">
+        <div class="shift-box">
+          <label for="shift-key" class="small">Shift key</label>
+          <div class="shift-value" id="shift-value">3</div>
+        </div>
+        <input type="number" id="shift-key" min="1" max="30" value="3">
+        <div class="small">(Shift wraps modulo 26 — e.g. 30 ≡ 4)</div>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button id="encrypt-btn" class="btn-primary">Encrypt</button>
+      <button id="decrypt-btn" class="btn-secondary">Decrypt</button>
+      <button id="clear-btn" class="btn-secondary">Clear</button>
+    </div>
+
+    <label class="small" style="margin-top:16px;display:block">Result</label>
+    <div id="result-text" class="result">—</div>
+    <div class="result-actions">
+      <button id="copy-btn" class="btn-primary">Copy</button>
+    </div>
+
+    <p class="small" style="margin-top:14px">Implementation notes: encryption shifts letters forward; decryption shifts backward. Non-letter characters (spaces, punctuation, digits) are left unchanged.</p>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const cipherTextarea = document.getElementById('cipher-text');
+      const shiftKeyInput = document.getElementById('shift-key');
+      const shiftValueSpan = document.getElementById('shift-value');
+      const encryptBtn = document.getElementById('encrypt-btn');
+      const decryptBtn = document.getElementById('decrypt-btn');
+      const resultTextDiv = document.getElementById('result-text');
+      const copyBtn = document.getElementById('copy-btn');
+      const clearBtn = document.getElementById('clear-btn');
+
+      shiftKeyInput.addEventListener('input', () => {
+        shiftValueSpan.textContent = shiftKeyInput.value;
+      });
+      function shiftCharacter(char, shift) {
+        const code = char.charCodeAt(0);
+        if (code >= 65 && code <= 90) { // A-Z
+          return String.fromCharCode(((code - 65 + shift + 26) % 26) + 65);
+        }
+        if (code >= 97 && code <= 122) { // a-z
+          return String.fromCharCode(((code - 97 + shift + 26) % 26) + 97);
+        }
+        return char; 
+      }
+
+      function processText(text, shift, isEncrypt) {
+        const finalShift = isEncrypt ? shift : -shift;
+        let out = '';
+        for (let i = 0; i < text.length; i++) {
+          out += shiftCharacter(text[i], finalShift);
+        }
+        return out;
+      }
+
+      encryptBtn.addEventListener('click', () => {
+        const text = cipherTextarea.value;
+        const shift = parseInt(shiftKeyInput.value, 10) || 0;
+        const res = processText(text, shift, true);
+        resultTextDiv.textContent = res || '—';
+      });
+
+      decryptBtn.addEventListener('click', () => {
+        const text = cipherTextarea.value;
+        const shift = parseInt(shiftKeyInput.value, 10) || 0;
+        const res = processText(text, shift, false);
+        resultTextDiv.textContent = res || '—';
+      });
+
+      copyBtn.addEventListener('click', async () => {
+        const txt = resultTextDiv.textContent || '';
+        if (!txt || txt === '—') return;
+        try {
+          await navigator.clipboard.writeText(txt);
+          const prev = copyBtn.textContent;
+          copyBtn.textContent = 'Copied ✓';
+          setTimeout(() => { copyBtn.textContent = prev; }, 1400);
+        } catch (e) {
+          console.error('Copy failed', e);
+        }
+      });
+
+      clearBtn.addEventListener('click', () => {
+        cipherTextarea.value = '';
+        resultTextDiv.textContent = '—';
+      });
+    });
+  </script>
+</body>
+</html>
